@@ -1,0 +1,12 @@
+{
+    "name": "zoomyboy/base-request",
+    "description": "Base Request for Laravel 5",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Philipp Lang",
+            "email": "pille@zoomyboy.de"
+        }
+    ],
+    "require": {}
+}

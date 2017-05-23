@@ -1,0 +1,5 @@
+/vendor/
+*.swp
+*.swo
+*.swm
+.DS_Store
