@@ -29,11 +29,19 @@ abstract class Request extends FormRequest
 	public function persist($model = null) {
 		if ($model == null) {
 			$this->add();
-		} 
+		} else {
+			$this->edit($model);
+		}
 	}
 
 	public function add() {
 		$model = new $this->model;
+		$model->fill($this->getFillInput());
+		$this->createAssociations($model);
+		$model->save();
+	}
+
+	public function edit($model) {
 		$model->fill($this->getFillInput());
 		$this->createAssociations($model);
 		$model->save();
