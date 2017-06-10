@@ -1,11 +1,21 @@
 <?php
 
-namespace Zoomyboy\BaseRequest;
+namespace Zoomyboy\BaseRequest\Tests;
+
+use Zoomyboy\BaseRequest\Tests\Providers\ServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase {
 	public function setUp() {
 		parent::setUp();
+
+		$this->artisan('migrate', ['--database' => 'testbench']);
 	}
+
+	protected function getPackageProviders($app)
+	{
+		return ['Zoomyboy\BaseRequest\Tests\Providers\ServiceProvider'];
+	}
+
 	/**
 	 * Define environment setup.
 	 *
@@ -21,5 +31,10 @@ class TestCase extends \Orchestra\Testbench\TestCase {
 			'database' => ':memory:',
 			'prefix'   => '',
 		]);
+	}
+
+	/** @test */
+	public function it_works() {
+		$this->assertTrue(true);
 	}
 }

@@ -5,9 +5,12 @@ namespace Zoomyboy\BaseRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Model;
 
 abstract class Request extends FormRequest
 {
+	public $modelInstance;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -17,6 +20,23 @@ abstract class Request extends FormRequest
     {
         return true;
     }
+
+	public function getModel() {
+		if (is_null($this->modelInstance)) {
+			return new $this->model();
+		}
+
+		return $this->modelInstance;
+	}
+
+	/**
+	 * Sets the Model to be inserted or updated directly
+	 *
+	 * @param Model $model
+	 */
+	public function setModel(Model $model) {
+		$this->modelInstance = $model;
+	}
 
     /**
      * Get the validation rules that apply to the request.
@@ -106,7 +126,7 @@ abstract class Request extends FormRequest
 	 *
 	 * @return array
 	 */
-	protected function getFillInput() {
+	public function getFillInput() {
 		$model = new $this->model();
 
 		return array_filter($this->input(), function($item, $index) use($model) {
@@ -132,10 +152,10 @@ abstract class Request extends FormRequest
 	 * Id of the related (belongs-to) model
 	 * This method should be called before the input model is saved,
 	 * because the ID of the saved input model is not relevant.
-	 *
-	 * @param Model $model An (probably previously filled) instance of the input model
 	 */
-	public function createBelongsTo($model) {
+	public function createBelongsTo() {
+		$model = $this->getModel();
+
 		foreach($this->getBelongsToValues() as $method => $value) {
 			$associatedModelName = '\\'.get_class($model->{$method}()->getRelated());
 
@@ -168,6 +188,4 @@ abstract class Request extends FormRequest
 			}
 		}
 	}
-
-
 }
