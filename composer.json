@@ -13,7 +13,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Zoomyboy\\BaseRequestTests\\": "tests/",
+			"Zoomyboy\\BaseRequest\\Tests\\": "tests/",
 			"Zoomyboy\\BaseRequest\\": "src/"
 		}
 	}

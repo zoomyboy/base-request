@@ -1,8 +1,11 @@
 <?php
 
-namespace Zoomyboy\BaseRequest\Tests;
+namespace Zoomyboy\BaseRequest;
 
 class TestCase extends \Orchestra\Testbench\TestCase {
+	public function setUp() {
+		parent::setUp();
+	}
 	/**
 	 * Define environment setup.
 	 *
