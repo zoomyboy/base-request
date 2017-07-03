@@ -4,6 +4,7 @@ namespace Zoomyboy\BaseRequest;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,25 +50,32 @@ abstract class Request extends FormRequest
 
 	public function persist($model = null) {
 		if ($model == null) {
-			$this->add();
+			return $this->add();
 		} else {
-			$this->edit($model);
+			return $this->edit($model);
 		}
 	}
 
 	public function add() {
-		$model = new $this->model;
-		$model->fill($this->getFillInput());
-		$this->createBelongsTo($model);
-		$model->save();
-		$this->createSaveOne($model);
+		$model = $this->getModel();
+		$this->modelInstance = $this->getModel()->fill($this->getFillInput());
+		$this->createBelongsTo();
+		$this->getModel()->save();
+		$this->createSaveOne();
+		$this->createBelongsToMany();
+
+		return $this->getModel();
 	}
 
 	public function edit($model) {
-		$model->fill($this->getFillInput());
-		$this->createBelongsTo($model);
-		$model->save();
-		$this->createSaveOne($model);
+		$this->setModel($model);
+		$this->modelInstance = $this->getModel()->fill($this->getFillInput());
+		$this->createBelongsTo();
+		$this->getModel()->save();
+		$this->createSaveOne();
+		$this->createBelongsToMany();
+
+		return $this->getModel();
 	}
 
 	//---------------------------- Method determination -----------------------------
@@ -90,6 +98,27 @@ abstract class Request extends FormRequest
 	public function getBelongsToValues() {
 		return array_filter($this->input(), function($item, $index) {
 			return $this->isMethod($index) && $this->isBelongsToMethod($index);
+		}, ARRAY_FILTER_USE_BOTH);
+	}
+
+	/**
+	 * Determines if the given method of the Saving model is a Relation
+	 * with the sync option, so that you can attach/detach the related models
+	 *
+	 * @param string $method The method name
+	 *
+	 * @return bool
+	 */
+	private function isBelongsToManyMethod($method) {
+		$model = new $this->model();
+		$relation = $model->{$method}();
+
+		return $relation instanceOf BelongsToMany;
+	}
+
+	public function getBelongsToManyValues() {
+		return array_filter($this->input(), function($item, $index) {
+			return $this->isMethod($index) && $this->isBelongsToManyMethod($index);
 		}, ARRAY_FILTER_USE_BOTH);
 	}
 
@@ -120,6 +149,9 @@ abstract class Request extends FormRequest
 		return method_exists($model, $method);
 	}
 
+	//*******************************************************************************
+	//---------------------------- Getters of the input -----------------------------
+	//*******************************************************************************
 	/**
 	 * Filters the given input array and return only the fillable Values
 	 * Those Values can be inserted directly in the input model, because they are fillable
@@ -144,6 +176,9 @@ abstract class Request extends FormRequest
 		}, ARRAY_FILTER_USE_BOTH);
 	}
 
+	//*******************************************************************************
+	//------------------------------ Create relations -------------------------------
+	//*******************************************************************************
 	/**
 	 * Associates models that have already been saved to the database
 	 * with the input model.
@@ -167,13 +202,34 @@ abstract class Request extends FormRequest
 	}
 
 	/**
+	 * Syncs models that have already been saved to the database
+	 * with the input model.
+	 *
+	 * Usually, the input value is an array of all Related IDs you want so sync. All other
+	 * related Models that aren't present in this array will be detacheed.
+	 * This method should be called after the input model is saved, because it stores
+	 * the ID of the input model in the pivot table.
+	 */
+	public function createBelongsToMany() {
+		$model = $this->getModel();
+
+		foreach($this->getBelongsToManyValues() as $method => $value) {
+			$associatedModelName = '\\'.get_class($model->{$method}()->getRelated());
+
+			if (is_array($value)) {
+				$model->{$method}()->sync($value);
+			}
+		}
+	}
+
+	/**
 	 * Create save one relations.
 	 * This should be called after saving the input model, because we have to know the Id 
 	 * of the input model to save the related one
-	 *
- 	 * @param Model $model An (probably previously filled) instance of the input model
 	 */
-	public function createSaveOne($model) {
+	public function createSaveOne() {
+		$model = $this->getModel();
+
 		foreach($this->getSaveOneValues() as $method => $value) {
 			if (!is_array($value)) {continue;}
 
@@ -186,6 +242,41 @@ abstract class Request extends FormRequest
 				//Id doesnt exists on the related Model, so we should create that from scratch
 				$model->{$method}()->save(new $associatedModelName($value));
 			}
+		}
+	}
+
+    /**
+     * Validate the class instance.
+     *
+     * @return void
+     */
+    public function validate()
+    {
+        $this->prepareForValidation();
+
+        $instance = $this->getValidatorInstance();
+		$this->addCustomValidationRules($instance);
+
+        if (! $this->passesAuthorization()) {
+            $this->failedAuthorization();
+        } elseif (! $instance->passes()) {
+            $this->failedValidation($instance);
+        }
+	}
+
+	protected function addCustomValidationRules(&$validator) {
+		if (!method_exists($this, 'customRules')) {
+			return;
+		}
+
+		if ($this->customRules() === null) {
+			return;
+		}	
+
+		foreach($this->customRules() as $field => $message) {
+			$validator->after(function($v) use ($field, $message) {
+				$v->errors()->add($field, $message);
+			});
 		}
 	}
 }
