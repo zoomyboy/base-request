@@ -64,6 +64,10 @@ abstract class Request extends FormRequest
 		$this->createSaveOne();
 		$this->createBelongsToMany();
 
+		if (method_exists($this, 'afterPersist')) {
+			$this->afterPersist($this->getModel());
+		}
+
 		return $this->getModel();
 	}
 
@@ -74,6 +78,10 @@ abstract class Request extends FormRequest
 		$this->getModel()->save();
 		$this->createSaveOne();
 		$this->createBelongsToMany();
+
+		if (method_exists($this, 'afterPersist')) {
+			$this->afterPersist($this->getModel());
+		}
 
 		return $this->getModel();
 	}
@@ -161,7 +169,7 @@ abstract class Request extends FormRequest
 	public function getFillInput() {
 		$model = new $this->model();
 
-		return array_filter($this->input(), function($item, $index) use($model) {
+		$fill = array_filter($this->input(), function($item, $index) use($model) {
 			if ($this->isMethod($index)) {
 				return false;
 			}
@@ -174,6 +182,12 @@ abstract class Request extends FormRequest
 
 			return true;
 		}, ARRAY_FILTER_USE_BOTH);
+
+		if (method_exists($this, 'modifyFillables')) {
+			$fill = $this->modifyFillables($fill);
+		}
+
+		return $fill;
 	}
 
 	//*******************************************************************************
