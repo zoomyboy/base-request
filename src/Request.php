@@ -19,6 +19,10 @@ abstract class Request extends FormRequest
      */
     public function authorize()
     {
+		if(property_exists($this, 'right')) {
+			return auth()->user()->hasRight($this->right);
+		}
+
         return true;
     }
 
@@ -211,6 +215,9 @@ abstract class Request extends FormRequest
 			if (is_numeric($value)
 			  && !is_null($associatedModelName::find($value))) {
 				$model->{$method}()->associate($associatedModelName::find($value));
+			}
+			if (is_null($value)) {
+				$model->{$method}()->dissociate();
 			}
 		}
 	}

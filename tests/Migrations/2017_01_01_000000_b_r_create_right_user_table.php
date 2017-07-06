@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateRightUserTable extends Migration {
+class BRCreateRightUserTable extends Migration {
 	public function up() {
 		Schema::create('right_user', function (Blueprint $table) {
 			$table->increments('right_id');

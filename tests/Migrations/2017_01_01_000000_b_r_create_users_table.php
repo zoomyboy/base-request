@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateUsersTable extends Migration {
+class BRCreateUsersTable extends Migration {
 	public function up() {
 		Schema::create('testusers', function (Blueprint $table) {
 			$table->increments('id');
