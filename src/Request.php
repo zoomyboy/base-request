@@ -256,12 +256,11 @@ abstract class Request extends FormRequest
 
 			$associatedModelName = '\\'.get_class($model->{$method}()->getRelated());
 
-			if (array_key_exists('id', $value)) {
-				//We have the Id of the related model, so we just update it
-				$associatedModelName::find($value['id'])->update($value);
-			} else {
-				//Id doesnt exists on the related Model, so we should create that from scratch
+			if(is_null($model->{$method})) {
+				//Related Model doesnt exist yet - so we save a new one
 				$model->{$method}()->save(new $associatedModelName($value));
+			} else {
+				$model->{$method}->update($value);
 			}
 		}
 	}
