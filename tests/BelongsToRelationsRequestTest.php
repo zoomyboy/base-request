@@ -4,6 +4,7 @@ namespace Zoomyboy\BaseRequest\Tests;
 
 use \Illuminate\Http\Request;
 use \Zoomyboy\BaseRequest\Tests\Requests\CommentRequest;
+use \Zoomyboy\BaseRequest\Handler;
 use \Zoomyboy\BaseRequest\Tests\Models\Comment;
 use \Zoomyboy\BaseRequest\Tests\Models\Post;
 
@@ -14,23 +15,20 @@ class BelongsToRelationRequestTest extends TestCase {
 
 	/** @test */
 	public function it_gets_fillable_attributes_without_the_belongsto_relation() {
-		$request = new CommentRequest();
-		$request->replace(['content' => 'This is my comment for that post', 'post_id' => 2]);
-		$this->assertEquals(['content' => 'This is my comment for that post'], $request->getFillInput());
+		$handler = new Handler(new Comment(), ['content' => 'This is my comment for that post', 'post_id' => 2]);
+		$this->assertEquals(['content' => 'This is my comment for that post'], $handler->getFillInput());
 	}
 
 	/** @test */
 	public function it_gets_all_the_fillable_vars_to_set() {
-		$request = new CommentRequest();
-		$request->replace(['post' => 3, 'content' => 'con']);
-		$this->assertEquals(['content' => 'con'], $request->getFillInput());
+		$handler = new Handler(new Comment(), ['post' => 3, 'content' => 'con']);
+		$this->assertEquals(['content' => 'con'], $handler->getFillInput());
 	}
 
 	/** @test */
 	public function it_gets_all_the_belongsto_vars_to_set() {
-		$request = new CommentRequest();
-		$request->replace(['post' => 3, 'content' => 'con']);
-		$this->assertEquals(['post' => 3], $request->getBelongsToValues());
+		$handler = new Handler(new Comment(), ['post' => 3, 'content' => 'con']);
+		$this->assertEquals(['post' => 3], $handler->getBelongsToValues());
 	}
 
 	/** @test */
@@ -40,12 +38,10 @@ class BelongsToRelationRequestTest extends TestCase {
 		$model = new Comment(['content' => 'This is another Comment for another Post']);
 		$this->assertNull($model->post);
 
-		$request = new CommentRequest();
-		$request->replace(['post' => $post->id]);
-		$request->setModel($model);
+		$handler = new Handler(new Comment(), ['post' => $post->id]);
 
-		$request->createBelongsTo();
+		$handler->createBelongsTo();
 
-		$this->assertEquals($post->id, $request->getModel()->post->id);
+		$this->assertEquals($post->id, $handler->model->post->id);
 	}
 }

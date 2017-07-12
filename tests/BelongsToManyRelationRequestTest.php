@@ -4,6 +4,7 @@ namespace Zoomyboy\BaseRequest\Tests;
 
 use \Illuminate\Http\Request;
 use \Zoomyboy\BaseRequest\Tests\Requests\UserRequest;
+use \Zoomyboy\BaseRequest\Handler;
 use \Zoomyboy\BaseRequest\Tests\Models\User;
 use \Zoomyboy\BaseRequest\Tests\Models\Right;
 
@@ -14,23 +15,20 @@ class BelongsToManyRelationRequestTest extends TestCase {
 
 	/** @test */
 	public function it_gets_fillable_attributes_without_the_belongstomany_relation() {
-		$request = new UserRequest();
-		$request->replace(['name' => 'User Name', 'rights' => [2,5]]);
-		$this->assertEquals(['name' => 'User Name'], $request->getFillInput());
+		$handler = new Handler (new user(), ['name' => 'User Name', 'rights' => [2,5]]);
+		$this->assertEquals(['name' => 'User Name'], $handler->getFillInput());
 	}
 
 	/** @test */
 	public function it_gets_all_the_fillable_vars_to_set() {
-		$request = new UserRequest();
-		$request->replace(['name' => 'user name']);
-		$this->assertEquals(['name' => 'user name'], $request->getFillInput());
+		$handler = new Handler (new user(), ['name' => 'User Name']);
+		$this->assertEquals(['name' => 'User Name'], $handler->getFillInput());
 	}
 
 	/** @test */
 	public function it_gets_all_the_belongstomany_vars_to_set() {
-		$request = new UserRequest();
-		$request->replace(['name' => 'user name', 'rights' => [2,5]]);
-		$this->assertEquals(['rights' => [2,5]], $request->getBelongsToManyValues());
+		$handler = new Handler (new user(), ['name' => 'user name', 'rights' => [2,5]]);
+		$this->assertEquals(['rights' => [2,5]], $handler->getBelongsToManyValues());
 	}
 
 	/** @test */
@@ -41,17 +39,15 @@ class BelongsToManyRelationRequestTest extends TestCase {
 			Right::create(['title' => 'delete'])
 		]);
 
-		$request = new UserRequest();
-		$request->replace([
-			'rights' => $rights->only([0,1])->pluck('id')->toArray()
-		]);
+		$user = User::create(['name' => 'user name']);
 
-		$request->setModel(User::create(['name' => 'user name']));
-		$request->createBelongsToMany();
+		$handler = new Handler($user, ['rights' => $rights->only([0,1])->pluck('id')->toArray()]);
+
+		$handler->createBelongsToMany();
 
 		$this->assertEquals(
 			[$rights[0]->id,$rights[1]->id],
-			$request->getModel()->rights->pluck('id')->toArray()
+			$handler->model->rights->pluck('id')->toArray()
 		);
 	}
 
@@ -63,13 +59,11 @@ class BelongsToManyRelationRequestTest extends TestCase {
 			Right::create(['title' => 'delete'])
 		]);
 
-		$request = new UserRequest();
-		$request->replace([
+		$handler = new Handler(new User(), [
 			'name' => 'user name',
 			'rights' => $rights->only([0,1])->pluck('id')->toArray()
 		]);
-
-		$user = $request->persist();
+		$user = $handler->handle();
 
 		$this->assertEquals(
 			[$rights[0]->id,$rights[1]->id],
