@@ -23,6 +23,10 @@ abstract class Request extends FormRequest
 			return auth()->user()->hasRight($this->right);
 		}
 
+		if (property_exists($this, 'scope')) {
+			return auth()->user()->tokenCan($this->scope);
+		}
+
         return true;
     }
 

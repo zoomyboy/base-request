@@ -44,4 +44,19 @@ class BelongsToRelationRequestTest extends TestCase {
 
 		$this->assertEquals($post->id, $handler->model->post->id);
 	}
+
+	/** @test */
+	public function it_creates_a_related_model() {
+		$handler = new Handler(new Comment(), [
+			'content' => 'This is another Comment for another Post',
+			'post' => [
+				'title' => "Post Title"
+			]
+		]);
+
+		$model = $handler->handle();
+
+		$this->assertEquals('This is another Comment for another Post', $model->content);
+		$this->assertEquals('Post Title', $model->post->title);
+	}
 }

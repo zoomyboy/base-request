@@ -150,8 +150,15 @@ class Handler {
 			  && !is_null($associatedModelName::find($value))) {
 				$this->model->{$method}()->associate($associatedModelName::find($value));
 			}
+
 			if (is_null($value)) {
 				$this->model->{$method}()->dissociate();
+			}
+
+			//Insert new related Model, because no primary key was provided
+			if (is_array($value) && !array_key_exists('id', $value)) {
+				$relatedModel = (new self(new $associatedModelName, $value))->handle();
+				$this->model->{$method}()->associate($relatedModel);
 			}
 		}
 	}
