@@ -5,6 +5,7 @@ namespace Zoomyboy\BaseRequest;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class Handler {
 	
@@ -176,9 +177,19 @@ class Handler {
 		foreach($this->getBelongsToManyValues() as $method => $value) {
 			$associatedModelName = '\\'.get_class($this->model->{$method}()->getRelated());
 
-			if (is_array($value)) {
-				$this->model->{$method}()->sync($value);
+			if (!is_array($value)) {
+				return;
 			}
+
+			array_walk($value, function($id) use ($associatedModelName) {
+				if (is_null($associatedModelName::find($id))) {
+					throw new ModelNotFoundException('Model '.$associatedModelName.' with ID '.$id.' wasnt found.');
+				}
+
+				return $id;
+			});
+
+			$this->model->{$method}()->sync($value);
 		}
 	}
 

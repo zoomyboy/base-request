@@ -51,6 +51,24 @@ class BelongsToManyRelationRequestTest extends TestCase {
 		);
 	}
 
+	/**
+	 * @test
+	 * @expectedException Illuminate\Database\Eloquent\ModelNotFoundException
+	 */
+	public function it_throws_exception_if_related_model_wasnt_found() {
+		$rights = collect([
+			Right::create(['title' => 'view']),
+			Right::create(['title' => 'edit']),
+			Right::create(['title' => 'delete'])
+		]);
+
+		$user = User::create(['name' => 'user name']);
+
+		$handler = new Handler($user, ['rights' => [999]]);
+
+		$handler->createBelongsToMany();
+	}
+
 	/** @test */
 	public function it_attaches_existing_related_models_to_a_new_request() {
 		$rights = collect([
