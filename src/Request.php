@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class Request extends FormRequest
 {
-	public $modelInstance;
+    public $modelInstance;
 
     /**
      * Determine if the user is authorized to make this request.
@@ -19,13 +19,13 @@ abstract class Request extends FormRequest
      */
     public function authorize()
     {
-		if(property_exists($this, 'right')) {
-			return auth()->user()->hasRight($this->right);
-		}
+        if (property_exists($this, 'right')) {
+            return auth()->user()->hasRight($this->right);
+        }
 
-		if (property_exists($this, 'scope')) {
-			return auth()->user()->tokenCan($this->scope);
-		}
+        if (property_exists($this, 'scope')) {
+            return auth()->user()->tokenCan($this->scope);
+        }
 
         return true;
     }
@@ -35,25 +35,30 @@ abstract class Request extends FormRequest
      *
      * @return array
      */
-	public function rules() {
-		return [];
-	}
+    public function rules()
+    {
+        return [];
+    }
 
-	public function persist($model = null) {
-		$fill = (method_exists($this, 'modifyFillables')) ? $this->modifyFillables($this->input()) : $this->input();
+    public function persist($model = null)
+    {
+        $fill = (method_exists($this, 'modifyFillables')) ? $this->modifyFillables($this->input()) : $this->input();
 
-		$model = $model ?: new $this->model;
-		$handler = new Handler ($model, $fill);
-		$model = $handler->handle();
+        $model = $model ?: new $this->model;
+        $handler = new Handler($model, $fill);
+        $model = $handler->handle();
 
-		if (method_exists($this, 'afterPersist')) {
-			$this->afterPersist($model);
-		}
+        if (method_exists($this, 'afterPersist')) {
+            $this->afterPersist($model);
+        }
 
-		return $model;
-	}
+        return $model;
+    }
 
-
+    public function validateResolved()
+    {
+        $this->validate();
+    }
 
     /**
      * Validate the class instance.
@@ -65,28 +70,29 @@ abstract class Request extends FormRequest
         $this->prepareForValidation();
 
         $instance = $this->getValidatorInstance();
-		$this->addCustomValidationRules($instance);
+        $this->addCustomValidationRules($instance);
 
         if (! $this->passesAuthorization()) {
             $this->failedAuthorization();
         } elseif (! $instance->passes()) {
             $this->failedValidation($instance);
         }
-	}
+    }
 
-	protected function addCustomValidationRules(&$validator) {
-		if (!method_exists($this, 'customRules')) {
-			return;
-		}
+    protected function addCustomValidationRules(&$validator)
+    {
+        if (!method_exists($this, 'customRules')) {
+            return;
+        }
 
-		if ($this->customRules() === null) {
-			return;
-		}	
+        if ($this->customRules() === null) {
+            return;
+        }
 
-		foreach($this->customRules() as $field => $message) {
-			$validator->after(function($v) use ($field, $message) {
-				$v->errors()->add($field, $message);
-			});
-		}
-	}
+        foreach ($this->customRules() as $field => $message) {
+            $validator->after(function ($v) use ($field, $message) {
+                $v->errors()->add($field, $message);
+            });
+        }
+    }
 }
