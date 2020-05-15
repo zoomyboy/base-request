@@ -2,7 +2,6 @@
     "name": "zoomyboy/base-request",
     "description": "Base Request for Laravel 5",
     "type": "library",
-    "version": "dev-master",
     "authors": [
         {
             "name": "Philipp Lang",
