@@ -8,7 +8,7 @@ use \Zoomyboy\BaseRequest\Handler;
 use \Zoomyboy\BaseRequest\Tests\Models\Comment;
 use \Zoomyboy\BaseRequest\Tests\Models\Post;
 
-class BelongsToRelationRequestTest extends TestCase
+class BelongsToRelationsRequestTest extends TestCase
 {
     public function setUp()
     {
