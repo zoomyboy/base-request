@@ -8,9 +8,6 @@
             "email": "pille@zoomyboy.de"
         }
     ],
-    "require": {
-		"orchestra/testbench": "~3.4"
-	},
 	"autoload": {
 		"psr-4": {
 			"Zoomyboy\\BaseRequest\\Tests\\": "tests/",
